@@ -7,7 +7,6 @@
 //
 
 import Foundation
-import CoreGraphics
 
 #if os(iOS) || os(tvOS) || os(watchOS)
     import UIKit
@@ -286,12 +285,16 @@ public enum Fit: URLImageQueryExtendable {
 
     #if os(iOS) || os(tvOS) || os(watchOS)
     /// If building for iOS, tvOS, or watchOS, `Color` aliases to `UIColor`. If building for macOS
-    /// `Color` aliases to `NSColor`
+    /// `Color` aliases to `NSColor`. If building for Linux, `Color` will remain a `String`
     public typealias Color = UIColor
-    #else
+    #elseif os(macOS)
     /// If building for iOS, tvOS, or watchOS, `Color` aliases to `UIColor`. If building for macOS
-    /// `Color` aliases to `NSColor`
+    /// `Color` aliases to `NSColor`. If building for Linux, `Color` will remain a `String`
     public typealias Color = NSColor
+    #elseif os(Linux)
+    /// If building for iOS, tvOS, or watchOS, `Color` aliases to `UIColor`. If building for macOS
+    /// `Color` aliases to `NSColor`. If building for Linux, `Color` will remain a `String`
+    public typealias Color = String
     #endif
 
     /// If specifying an optional `UIColor` or `NSColor` make sure to also provide a custom width and height
@@ -326,8 +329,12 @@ public enum Fit: URLImageQueryExtendable {
     fileprivate func additionalQueryItem() throws -> URLQueryItem? {
         switch self {
         case .pad(let .some(color)):
+            #if os(Linux)
+            let hexRepresentation = color
+            #else
             let cgColor = color.cgColor
             let hexRepresentation = cgColor.hexRepresentation()
+            #endif
             return URLQueryItem(name: ImageParameters.backgroundColor, value: "rgb:" + hexRepresentation)
 
         case .thumb(let .some(focus)):
@@ -397,7 +404,7 @@ private enum ImageParameters {
     static let quality          = "q"
 }
 
-
+#if !os(Linux)
 // Use CGColor instead of UIColor to enable cross-platform compatibility: macOS, iOS, tvOS, watchOS.
 internal extension CGColor {
 
@@ -431,3 +438,5 @@ internal extension CGColor {
         return hexString
     }
 }
+
+#endif
