@@ -59,3 +59,34 @@ extension Sys: Decodable {
         case id, type, createdAt, updatedAt, locale, revision, contentType
     }
 }
+
+extension Sys: Encodable {
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+
+        try container.encode(id, forKey: .id)
+        try container.encode(type, forKey: .type)
+
+        if let createdAt = createdAt {
+            try container.encode(createdAt, forKey: .createdAt)
+        }
+
+        if let updatedAt = updatedAt {
+            try container.encode(updatedAt, forKey: .updatedAt)
+        }
+
+        if let locale = locale {
+            try container.encode(locale, forKey: .locale)
+        }
+
+        if let revision = revision {
+            try container.encode(revision, forKey: .revision)
+        }
+
+        if let contentTypeInfo = contentTypeInfo {
+            try container.encode(contentTypeInfo, forKey: .contentType)
+        }
+
+
+    }
+}

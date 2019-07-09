@@ -10,7 +10,7 @@
 public typealias FieldName = String
 
 /// The possible Field types in a Contentful content type.
-public enum FieldType: String, Decodable {
+public enum FieldType: String, Codable {
     /// An array of links or symbols
     case array                          = "Array"
     /// A link to an Asset
@@ -42,7 +42,7 @@ public enum FieldType: String, Decodable {
 }
 
 /// A Field describes a single value inside an Entry.
-public struct Field: Decodable {
+public struct Field: Codable {
 
     /// The unique identifier of this Field
     public let id: String
@@ -90,6 +90,21 @@ public struct Field: Decodable {
             itemTypeString = try container.decode(String.self, forKey: .linkType)
         }
         self.itemType = FieldType(rawValue: itemTypeString ?? FieldType.none.rawValue) ?? .none
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+
+        try container.encode(id, forKey: .id)
+        try container.encode(name, forKey: .name)
+        try container.encode(disabled, forKey: .disabled)
+        try container.encode(localized, forKey: .localized)
+        try container.encode(required, forKey: .required)
+        try container.encode(type, forKey: .type)
+
+        if let itemType = itemType {
+            try container.encode(itemType, forKey: .linkType)
+        }
     }
 
     private enum CodingKeys: String, CodingKey {

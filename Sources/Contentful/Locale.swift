@@ -17,7 +17,7 @@ extension Locale: EndpointAccessible {
 }
 
 /// A Locale represents possible translations for Entry Fields
-public class Locale: Resource, FlatResource, Decodable {
+public class Locale: Resource, FlatResource, Codable {
 
     /// System fields.
     public let sys: Sys
@@ -134,19 +134,24 @@ internal enum Localization {
     // Normalizes fields to have a value for every locale in the space.
     internal static func fieldsInMultiLocaleFormat(from fields: [FieldName: Any],
                                                    selectedLocale: Locale,
-                                                   wasSelectedOnAPILevel: Bool) throws -> [FieldName: [LocaleCode: Any]] {
+                                                   wasSelectedOnAPILevel: Bool) throws -> [FieldName: [LocaleCode: Field]] {
 
         if wasSelectedOnAPILevel == false { // sanitize.
             // If there was no locale it the response, then we have the format with all locales present and we can simply map from localecode to locale and exit
-            guard let fields = fields as? [FieldName: [LocaleCode: Any]] else {
+            guard let fields = fields as? [FieldName: [LocaleCode: Field]] else {
                 throw SDKError.localeHandlingError(message: "Unexpected response format: 'sys.locale' not present, and"
                 + "individual fields dictionary is not in localizable format. i.e. 'title: { en-US: englishValue, de-DE: germanValue }'")
             }
             return fields
         }
 
+        guard let fields = fields as? [FieldName: Field] else {
+            throw SDKError.localeHandlingError(message: "Unexpected response format: 'sys.locale' present, and"
+                + "individual fields dictionary is not in localized format.")
+        }
+
         // Init container for our own format.
-        var localizableFields = [FieldName: [LocaleCode: Any]]()
+        var localizableFields = [FieldName: [LocaleCode: Field]]()
 
         for (fieldName, fieldValue) in fields {
             localizableFields[fieldName] = [selectedLocale.code: fieldValue]
