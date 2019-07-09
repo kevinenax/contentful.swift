@@ -95,6 +95,11 @@ internal extension Decodable where Self: Node {
     }
 }
 
+//internal extension Encodable where Self: Node {
+//    static func encode(into container: inout UnkeyedEncodingContainer) throws {
+//    }
+//}
+
 internal extension CodingUserInfoKey {
     static let linkResolverContextKey = CodingUserInfoKey(rawValue: "linkResolverContext")!
     static let timeZoneContextKey = CodingUserInfoKey(rawValue: "timeZoneContext")!

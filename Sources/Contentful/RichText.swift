@@ -10,13 +10,13 @@ import Foundation
 
 /// The base protocol which all node types that may be present in a tree of Structured text.
 /// See: <https://www.contentful.com/developers/docs/tutorials/general/structured-text-field-type-alpha/> for more information.
-public protocol Node: Decodable {
+public protocol Node: Codable {
     /// The type of node which should be rendered.
     var nodeType: NodeType { get }
 }
 
 /// The data describing the linked entry or asset for an `EmbeddedResouceNode`
-public class ResourceLinkData: Decodable {
+public class ResourceLinkData: Codable {
 
     /// The raw link object which describes the target entry or asset.
     ///
@@ -49,7 +49,7 @@ internal enum NodeContentCodingKeys: String, CodingKey {
 }
 
 /// A descriptor of the node's type, which can be used to determine rendering heuristics.
-public enum NodeType: String, Decodable {
+public enum NodeType: String, Codable {
     /// The top-level node type.
     case document
     /// A block of text, the parent node for inline text nodes.
@@ -133,6 +133,14 @@ public class BlockNode: Node {
         nodeType = try container.decode(NodeType.self, forKey: .nodeType)
         content = try container.decodeContent(forKey: .content)
     }
+
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: NodeContentCodingKeys.self)
+
+        try container.encode(nodeType, forKey: .nodeType)
+        try container.encodeContent(content, forKey: .content)
+    }
+
     internal init(nodeType: NodeType, content: [Node]) {
         self.nodeType = nodeType
         self.content = content
@@ -149,6 +157,12 @@ public class InlineNode: Node {
         nodeType = try container.decode(NodeType.self, forKey: .nodeType)
         content = try container.decodeContent(forKey: .content)
     }
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: NodeContentCodingKeys.self)
+
+        try container.encode(nodeType, forKey: .nodeType)
+        try container.encodeContent(content, forKey: .content)
+    }
     internal init(nodeType: NodeType, content: [Node]) {
         self.nodeType = nodeType
         self.content = content
@@ -164,7 +178,12 @@ public class RichTextDocument: Node {
         self.content = content
         self.nodeType = .document
     }
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: NodeContentCodingKeys.self)
 
+        try container.encode(nodeType, forKey: .nodeType)
+        try container.encodeContent(content, forKey: .content)
+    }
     required public init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: NodeContentCodingKeys.self)
         nodeType = try container.decode(NodeType.self, forKey: .nodeType)
@@ -275,12 +294,12 @@ public struct Text: Node {
     public let marks: [Mark]
 
     /// THe markup styling which should be applied to the text.
-    public struct Mark: Decodable {
+    public struct Mark: Codable {
         public let type: MarkType
     }
 
     /// A type of the markup styling which should be applied to the text.
-    public enum MarkType: String, Decodable {
+    public enum MarkType: String, Codable {
         /// Bold text.
         case bold
         /// Italicized text.
@@ -313,5 +332,56 @@ extension KeyedDecodingContainer {
             content.append(element)
         }
         return content
+    }
+}
+
+extension KeyedEncodingContainer {
+
+    internal mutating func encodeContent(_ content: [Node], forKey key: K) throws {
+
+        var container = self.nestedUnkeyedContainer(forKey: key)
+
+        for node in content {
+            switch node.nodeType {
+            case .paragraph:
+                let concreteNode = node as! Paragraph
+                try container.encode(concreteNode)
+            case .document:
+                let concreteNode = node as! RichTextDocument
+                try container.encode(concreteNode)
+            case .text:
+                let concreteNode = node as! Text
+                try container.encode(concreteNode)
+            case .h1, .h2, .h3, .h4, .h5, .h6:
+                let concreteNode = node as! Heading
+                try container.encode(concreteNode)
+            case .blockquote:
+                let concreteNode = node as! BlockQuote
+                try container.encode(concreteNode)
+            case .horizontalRule:
+                let concreteNode = node as! HorizontalRule
+                try container.encode(concreteNode)
+            case .orderedList:
+                let concreteNode = node as! OrderedList
+                try container.encode(concreteNode)
+            case .unorderedList:
+                let concreteNode = node as! UnorderedList
+                try container.encode(concreteNode)
+            case .listItem:
+                let concreteNode = node as! ListItem
+                try container.encode(concreteNode)
+            case .embeddedEntryBlock, .embeddedAssetBlock:
+                let concreteNode = node as! ResourceLinkBlock
+                try container.encode(concreteNode)
+            case .embeddedEntryInline, .assetHyperlink, .entryHyperlink:
+                let concreteNode = node as! ResourceLinkInline
+                try container.encode(concreteNode)
+            case .hyperlink:
+                let concreteNode = node as! Hyperlink
+                try container.encode(concreteNode)
+            }
+
+        }
+
     }
 }
