@@ -17,7 +17,7 @@ public protocol AssetProtocol: FlatResource {
 
 /// Classes conforming to this protocol can be decoded during JSON deserialization as reprsentations
 /// of Contentful assets. 
-public protocol AssetDecodable: AssetProtocol, Decodable {}
+public protocol AssetDecodable: AssetProtocol, Codable {}
 
 /// An asset represents a media file in Contentful.
 public class Asset: LocalizableResource, AssetDecodable {
@@ -57,7 +57,7 @@ public class Asset: LocalizableResource, AssetDecodable {
     public var file: FileMetadata? {
         return fields["file"] as? FileMetadata
     }
-    
+
     public override func encode(to encoder: Encoder) throws {
             try super.encode(to: encoder)
     }
@@ -79,9 +79,6 @@ public extension AssetProtocol {
         return url
     }
 }
-
-extension Asset {
-
 /// Metadata describing underlying media file.
 public struct FileMetadata: Codable {
 
@@ -98,50 +95,6 @@ public struct FileMetadata: Codable {
     /// If the media file is still being processed, as the final stage of uploading to your space, this property will be nil.
     public let url: URL?
 
-    /// The size and dimensions of the underlying media file if it is an image.
-    public struct Details: Codable {
-        /// The size of the file in bytes.
-        public let size: Int
-
-        /// Additional information describing the image the asset references.
-        public let imageInfo: ImageInfo?
-
-        /// A lightweight struct to hold the dimensions information for the this file, if it is an image type.
-        public struct ImageInfo: Codable {
-            /// The width of the image.
-            public let width: Double
-            /// The height of the image.
-            public let height: Double
-
-            public init(from decoder: Decoder) throws {
-                let container = try decoder.container(keyedBy: CodingKeys.self)
-                width         = try container.decode(Double.self, forKey: .width)
-                height        = try container.decode(Double.self, forKey: .height)
-            }
-
-            private enum CodingKeys: String, CodingKey {
-                case width, height
-            }
-        }
-
-        public init(from decoder: Decoder) throws {
-            let container = try decoder.container(keyedBy: CodingKeys.self)
-            size          = try container.decode(Int.self, forKey: .size)
-            imageInfo     = try container.decodeIfPresent(ImageInfo.self, forKey: .image)
-        }
-
-        public func encode(to encoder: Encoder) throws {
-            var container = encoder.container(keyedBy: CodingKeys.self)
-            try container.encode(size, forKey: .size)
-            if let imageInfo = self.imageInfo {
-                try container.encode(imageInfo, forKey: .image)
-            }
-        }
-
-        private enum CodingKeys: String, CodingKey {
-            case size, image
-        }
-    }
 
     public init(from decoder: Decoder) throws {
         let container   = try decoder.container(keyedBy: CodingKeys.self)
@@ -161,8 +114,50 @@ public struct FileMetadata: Codable {
     }
 }
 
+/// A lightweight struct to hold the dimensions information for the this file, if it is an image type.
+public struct ImageInfo: Codable {
+    /// The width of the image.
+    public let width: Double
+    /// The height of the image.
+    public let height: Double
+
+    //            public init(from decoder: Decoder) throws {
+    //                let container = try decoder.container(keyedBy: CodingKeys.self)
+    //                width         = try container.decode(Double.self, forKey: .width)
+    //                height        = try container.decode(Double.self, forKey: .height)
+    //            }
+    //
+    //            private enum CodingKeys: String, CodingKey {
+    //                case width, height
+    //            }
 }
 
+/// The size and dimensions of the underlying media file if it is an image.
+public struct Details: Codable {
+    /// The size of the file in bytes.
+    public let size: Int
+
+    /// Additional information describing the image the asset references.
+    public let imageInfo: ImageInfo?
+
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        size          = try container.decode(Int.self, forKey: .size)
+        imageInfo     = try container.decodeIfPresent(ImageInfo.self, forKey: .image)
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(size, forKey: .size)
+        if let imageInfo = self.imageInfo {
+            try container.encode(imageInfo, forKey: .image)
+        }
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case size, image
+    }
+}
 
 extension Asset: EndpointAccessible {
 

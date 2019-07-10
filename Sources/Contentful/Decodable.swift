@@ -261,7 +261,7 @@ internal extension KeyedDecodingContainer {
                 dictionary[key.stringValue] = doubleValue
             }
             // Custom contentful types.
-            else if let fileMetaData = try? decode(Asset.FileMetadata.self, forKey: key) {
+            else if let fileMetaData = try? decode(FileMetadata.self, forKey: key) {
                 dictionary[key.stringValue] = fileMetaData
             } else if let link = try? decode(Link.self, forKey: key) {
                 dictionary[key.stringValue] = link
@@ -298,7 +298,7 @@ internal extension UnkeyedDecodingContainer {
                 array.append(value)
             }
             // Custom contentful types.
-            else if let fileMetaData = try? decode(Asset.FileMetadata.self) {
+            else if let fileMetaData = try? decode(FileMetadata.self) {
                 array.append(fileMetaData) // Custom contentful type.
             } else if let link = try? decode(Link.self) {
                 array.append(link) // Custom contentful type.
