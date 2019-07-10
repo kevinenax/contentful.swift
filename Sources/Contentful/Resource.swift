@@ -16,7 +16,7 @@ public protocol Resource {
 }
 
 /// A protocol signifying that a resource's `Sys` property are accessible for lookup from the top level of the instance.
-public protocol FlatResource {
+public protocol FlatResource: Codable {
     /// The unique identifier of the Resource.
     var id: String { get }
 

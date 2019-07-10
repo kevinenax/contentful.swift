@@ -10,7 +10,7 @@ import Foundation
 
 /// The base protocol which all node types that may be present in a tree of Structured text.
 /// See: <https://www.contentful.com/developers/docs/tutorials/general/structured-text-field-type-alpha/> for more information.
-public protocol Node: Codable {
+public protocol Node: Decodable {
     /// The type of node which should be rendered.
     var nodeType: NodeType { get }
 }
@@ -36,6 +36,13 @@ public class ResourceLinkData: Codable {
             guard let self = self else { return }
             self.target = self.target.resolveWithCandidateObject(decodable)
         }
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: JSONCodingKeys.self)
+
+        try container.encode(target, forKey: JSONCodingKeys(stringValue: "target")!)
+        try container.encodeIfPresent(title, forKey: JSONCodingKeys(stringValue: "title")!)
     }
 
     internal init(resolvedTarget: Link, title: String? = nil) {
@@ -124,8 +131,10 @@ public enum NodeType: String, Codable {
 }
 
 /// BlockNode is the base class for all nodes which are rendered as a block (as opposed to an inline node).
-public class BlockNode: Node {
+public class BlockNode: Node, Codable {
     public let nodeType: NodeType
+
+    
     public internal(set) var content: [Node]
 
     required public init(from decoder: Decoder) throws {
@@ -148,7 +157,7 @@ public class BlockNode: Node {
 }
 
 /// InlineNode is the base class for all nodes which are rendered as an inline string (as opposed to a block node).
-public class InlineNode: Node {
+public class InlineNode: Node, Codable {
     public let nodeType: NodeType
     public internal(set) var content: [Node]
 
@@ -170,7 +179,7 @@ public class InlineNode: Node {
 }
 
 /// The top level node which contains all other nodes.
-public class RichTextDocument: Node {
+public class RichTextDocument: Node, Codable {
     public let nodeType: NodeType
     public internal(set) var content: [Node]
 
@@ -285,7 +294,7 @@ public class ResourceLinkInline: InlineNode {
 }
 
 /// A node containing text with marks.
-public struct Text: Node {
+public struct Text: Node, Codable {
     public let nodeType: NodeType
 
     /// The string value of the text.
@@ -309,6 +318,25 @@ public struct Text: Node {
         /// Text formatted as code; presumably with monospaced font.
         case code
     }
+
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        self.nodeType = try container.decode(NodeType.self, forKey: .nodeType)
+        self.marks = try container.decode(Array<Mark>.self, forKey: .marks)
+        self.value = try container.decode(String.self, forKey: .value)
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(value, forKey: .value)
+        try container.encode(marks, forKey: .marks)
+        try container.encode(nodeType, forKey: .nodeType)
+    }
+
+    enum CodingKeys: String, CodingKey {
+        case value, marks, nodeType
+    }
+
 }
 
 extension KeyedDecodingContainer {

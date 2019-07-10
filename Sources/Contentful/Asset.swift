@@ -17,7 +17,7 @@ public protocol AssetProtocol: FlatResource {
 
 /// Classes conforming to this protocol can be decoded during JSON deserialization as reprsentations
 /// of Contentful assets. 
-public protocol AssetDecodable: AssetProtocol, Codable {}
+public protocol AssetDecodable: AssetProtocol {}
 
 /// An asset represents a media file in Contentful.
 public class Asset: LocalizableResource, AssetDecodable {
