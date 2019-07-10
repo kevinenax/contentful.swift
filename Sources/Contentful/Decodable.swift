@@ -12,7 +12,7 @@ import Foundation
 public extension Decoder {
 
     internal var linkResolver: LinkResolver {
-        return userInfo[.linkResolverContextKey] as! LinkResolver
+        return LinkResolver.shared
     }
 
     /// The `TimeZone` the `Decoder` is using to offset dates by.
@@ -146,6 +146,8 @@ public extension KeyedDecodingContainer {
 }
 
 internal class LinkResolver {
+
+    static let shared = LinkResolver()
 
     private var dataCache: DataCache = DataCache()
 
