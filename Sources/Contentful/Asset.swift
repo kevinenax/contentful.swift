@@ -57,6 +57,10 @@ public class Asset: LocalizableResource, AssetDecodable {
     public var file: FileMetadata? {
         return fields["file"] as? FileMetadata
     }
+    
+    public override func encode(to encoder: Encoder) throws {
+            try super.encode(to: encoder)
+    }
 }
 
 public extension AssetProtocol {
