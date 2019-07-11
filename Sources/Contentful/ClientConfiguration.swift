@@ -119,12 +119,16 @@ public struct ClientConfiguration {
     }
 
     private func sdkVersionString() -> String {
+        #if os(Linux)
+        return "Unknown"
+        #else
         guard
             let bundleInfo = Bundle(for: Client.self).infoDictionary,
             let versionNumberString = bundleInfo["CFBundleShortVersionString"] as? String
             else { return "Unknown" }
 
         return "contentful.swift/\(versionNumberString)"
+        #endif
     }
 
     private func appVersionString() -> String? {
