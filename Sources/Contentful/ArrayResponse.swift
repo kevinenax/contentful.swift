@@ -40,7 +40,7 @@ public struct ArrayResponseError: Decodable {
     }
 
     /// System fields for the unresolvable link.
-    public let details: Link.Sys
+    public let details: Link.LinkSys
     /// System fields describing the type of this object ("error") and the error message: generally "notResolvable".
     public let sys: ArrayResponseError.Sys
 }

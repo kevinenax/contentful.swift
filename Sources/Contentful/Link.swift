@@ -15,7 +15,7 @@ public enum Link: Codable {
 
 
     /// The system properties which describe the link.
-    public struct Sys: Codable {
+    public struct LinkSys: Codable {
 
         /// The identifier of the linked resource
         public let id: String
@@ -39,15 +39,19 @@ public enum Link: Codable {
     case entryDecodable(EntryDecodable)
 
     /// The Link is unresolved, and therefore contains a dictionary of metadata describing the linked resource.
-    case unresolved(Link.Sys)
+    case unresolved(LinkSys)
 
     /// The unique identifier of the linked asset or entry.
     public var id: String {
         switch self {
-        case .asset(let asset):                     return asset.id
-        case .entry(let entry):                     return entry.id
-        case .entryDecodable(let entryDecodable):   return entryDecodable.id
-        case .unresolved(let sys):                  return sys.id
+        case .asset(let asset):
+            return asset.id
+        case .entry(let entry):
+            return entry.id
+        case .entryDecodable(let entryDecodable):
+            return entryDecodable.id
+        case .unresolved(let sys):
+            return sys.id
         }
     }
 
@@ -76,7 +80,7 @@ public enum Link: Codable {
     }
 
     /// The system properties which describe the link.
-    public var sys: Link.Sys {
+    public var sys: LinkSys {
         switch self {
         case .unresolved(let sys):
             return sys
@@ -140,7 +144,7 @@ public enum Link: Codable {
 
     public init(from decoder: Decoder) throws {
         let container   = try decoder.container(keyedBy: CodingKeys.self)
-        let sys         = try container.decode(Link.Sys.self, forKey: .sys)
+        let sys         = try container.decode(LinkSys.self, forKey: .sys)
         self            = .unresolved(sys)
     }
 
