@@ -124,9 +124,11 @@ open class Client {
         self.urlSession = URLSession(configuration: sessionConfiguration)
     }
 
+    #if !os(Linux)
     deinit {
         urlSession.invalidateAndCancel()
     }
+    #endif
 
     /// Returns an optional URL for the specified endpoint with its query paramaters.
     ///
